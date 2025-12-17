@@ -10,6 +10,8 @@
     "module": "nodenext",
     "target": "es2020",
     "types": [],
+    "allowJs": true,
+    "checkJs": false,
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -40,6 +42,10 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "nodenext",
   },
   "include": ["src"]
 }

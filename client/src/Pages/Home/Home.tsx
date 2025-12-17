@@ -1,9 +1,10 @@
-import { ChangeEvent, useState } from "react"
+import { ChangeEvent, useEffect, useState } from "react"
 import { Building2, Download, File, Filter, LogIn, LogOut, Search, Shield, Trash2, Upload, User } from "lucide-react"
 import useAuth from "../../Hooks/useAuth"
 import { useNavigate } from "react-router-dom"
+import { fetchUserFiles, uploadMultipleFiles } from "../../api/filesApi"
 
-type FileType = {
+export type FileType = {
     id: string
     name: string
     type: string
@@ -13,13 +14,30 @@ type FileType = {
 }
 
 const Home = () => {
-    const {currentUser, onLogout} = useAuth()
+    const {currentUser, token, onLogout} = useAuth()
     const [files, setFiles] = useState<FileType[]>([])
     const [searchTerm, setSearchTerm] = useState("")
     const [filterType, setFilterType] = useState("all")
     const [sortBy, setSortBy] = useState("date")
     const navigate = useNavigate(); // Hook to handle redirection after successful login
 
+  useEffect(() => {
+    const loadData = async () => {
+      if (!token) return;
+      try {
+        // setLoading(true);
+        const data = await fetchUserFiles(token);
+        console.log('load data:', data)
+        setFiles(data);
+      } catch (err) {
+        alert("Failed to load files");
+        console.log('load data error: ', err)
+      } finally {
+        // setLoading(false);
+      }
+    };
+      loadData()
+    }, [token])
 
     const formatSize = (size: number) => {
         if (size >= 1024 * 1024) return (size / (1024 * 1024)).toFixed(1) + " MB"
@@ -42,9 +60,11 @@ const Home = () => {
         setFiles(prev => prev.filter(f => f.id !== id))
     }
 
-    const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
-        const selected = e.target.files
-        if (!selected) return
+    const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+      const selected = e.target.files
+      if (!selected) return
+      if (!token) return
+      try {
         const newFiles: FileType[] = Array.from(selected).map(f => {
             const extMatch = f.name.split(".").pop()
             const type = extMatch ? extMatch.toLowerCase() : "file"
@@ -57,9 +77,34 @@ const Home = () => {
                 userId: currentUser?.id
             }
         })
-        setFiles(prev => [...newFiles, ...prev])
+        
+        const response = await uploadMultipleFiles(newFiles, token);
+        console.log('uploadMultipleFiles response', response)
+        let successfulFileIds = new Set<string>();
+        if (Array.isArray(response)) {
+          successfulFileIds = new Set(
+            response
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .filter((r: any) => r.status === "success")
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .map((r: any) => r.fileId)
+          );
+        } else {
+          // backend returned a single error object like { status: 'error', message: '...' }
+          console.error('uploadMultipleFiles error response:', response);
+        }
+        const successFiles: FileType[] = newFiles.filter(file =>
+          successfulFileIds.has(file.id)
+        );
+
+        console.log('successFiles: ', successFiles)
+       
+        setFiles(prev => [...successFiles, ...prev])
         // reset input value to allow re-uploading same file if needed
-        e.currentTarget.value = ""
+        // e.currentTarget.value = ""
+      } catch (error) {
+        console.error('handleFileUpload error:', error)
+      }
     }
 
     const filteredFiles: FileType[] = files
@@ -70,7 +115,7 @@ const Home = () => {
         })
         .sort((a, b) => {
             if (sortBy === "size") return b.size - a.size
-            return b.date.getTime() - a.date.getTime()
+            return new Date(b.date).getTime() - new Date(a.date).getTime()
         })
    
         return (
@@ -211,7 +256,7 @@ const Home = () => {
                                   {file.type.toUpperCase()}
                                 </span>
                                 <span>{formatSize(file.size)}</span>
-                                <span>{file.date.toLocaleDateString()}</span>
+                                <span>{new Date(file.date).toLocaleDateString()}</span>
                                 {currentUser.isAdmin && (
                                   <span className="px-2 py-0.5 bg-gray-100 rounded">
                                     {getUserEmail(file.userId)}

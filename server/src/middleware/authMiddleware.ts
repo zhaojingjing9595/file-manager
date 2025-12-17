@@ -1,12 +1,12 @@
 import { NextFunction, Request, Response } from "express"
-import {auth, db} from "../config/firebase-admin.js"
+import {auth, db} from "../config/firebaseAdmin.js"
 import { DecodedIdToken } from "firebase-admin/auth";
 
-export interface CustomRequest extends Request {
+export interface AuthRequest extends Request {
   user?: DecodedIdToken;
 }
 
-const requireAuth = async (req: CustomRequest, res: Response, next: NextFunction) => {
+const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
     // 1. Check for the Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -36,4 +36,18 @@ const requireAuth = async (req: CustomRequest, res: Response, next: NextFunction
     }
 }
 
-export default requireAuth;
+const identifyRole = (req: AuthRequest, res: Response, next: NextFunction) => {
+    // 1. Ensure a user is actually logged in (safety check)
+    if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized: Authentication required' });
+    }
+
+    // 2. Define role Logic
+    if (req.user.isAdmin) {
+        req.user.role = 'admin'
+    } else {
+        req.user.role = 'user'
+    }
+    next()
+}
+export {requireAuth, identifyRole};

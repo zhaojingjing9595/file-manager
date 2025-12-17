@@ -1,9 +1,9 @@
 import { Router } from "express";
-import requireAuth, { CustomRequest } from "../middleware/authMiddleware.js";
+import  { AuthRequest, requireAuth } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-router.post('/auth/verify-token', requireAuth, (req: CustomRequest, res) => {
+router.post('/auth/verify-token', requireAuth, (req: AuthRequest, res) => {
     // We know req.user exists because the `requireAuth` middleware ran successfully
     const user = req.user!;
     // This endpoint confirms the backend successfully authenticated the user

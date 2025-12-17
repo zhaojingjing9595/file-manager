@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import protectedRoutes from './routes/protectedRoutes.js';
+import fileRoutes from "./routes/fileRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -18,6 +19,8 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use('/api/v1', protectedRoutes)
+
+app.use('/api/v1/files', fileRoutes)
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
