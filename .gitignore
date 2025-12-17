@@ -18,3 +18,5 @@ firebase-debug.log*
 # OS / editor noise
 .DS_Store
 .vscode/
+
+server/src/.firebase-key*
