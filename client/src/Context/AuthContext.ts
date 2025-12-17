@@ -3,11 +3,13 @@ import { createContext } from "react";
 export interface User {
     id: string;
     email: string;
+    isAdmin: boolean;
 }
 
 export interface AuthContextType {
     currentUser: User | null;
-    setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>;
+    onGoogleLogin: () => Promise<void>;
+    onLogout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
