@@ -13,7 +13,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   : ['http://localhost:5173'];
   
 app.use(cors({
-  origin: allowedOrigins,
+  origin: ['http://localhost:5173', 'https://file-manager-7b2bc.web.app', 'https://file-manager-7b2bc.firebaseapp.com'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'] 
 }));
