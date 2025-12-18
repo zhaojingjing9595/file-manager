@@ -5,13 +5,13 @@ FROM node:20-slim
 WORKDIR /usr/src/app
 
 # Copy application dependency manifests to the container image
-COPY server/package*.json ./
+COPY package*.json ./
 
 # Install production dependencies
 RUN npm install --only=production
 
 # Copy local code to the container image
-COPY server/ .
+COPY . .
 
 # Build the project (if using TypeScript)
 RUN npm run build
