@@ -48,8 +48,8 @@ const Home = () => {
 
     const getUserEmail = (userId?: string) => {
         if (!userId) return "unknown"
-        if (currentUser && currentUser.id === userId) return currentUser.email
-        return "user@example.com"
+        if (currentUser && currentUser.id === userId) return 'you'
+        return "From: other user"
     }
 
   const handleFileDownload = async (fileId: string) => {
@@ -303,20 +303,29 @@ const Home = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleFileDownload(file.id)}
-                        className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition text-gray-600"
+                        disabled={currentUser && currentUser.id !== file.userId}
+                        className={`p-2 rounded-lg transition ${
+                          currentUser && currentUser.id !== file.userId
+                            ? " opacity-50 bg-gray-200" 
+                            : "bg-blue-50 hover:bg-blue-100 text-blue-600"
+                        }`}
                         title="Download"
                       >
                         <Download className="w-4 h-4" />
                       </button>
-                      {(currentUser.isAdmin || file.userId === currentUser.id) && (
-                        <button
-                          onClick={() => handleFileDelete(file.id)}
-                          className="p-2 bg-gray-50 hover:bg-red-50 rounded-lg transition text-gray-600 hover:text-red-600"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button
+                        disabled={currentUser && currentUser.id !== file.userId}
+                        onClick={() => handleFileDelete(file.id)}
+                        className={`p-2 rounded-lg transition ${
+                          currentUser && currentUser.id !== file.userId
+                            ? " opacity-50 bg-gray-200" 
+                            : "bg-red-50 hover:bg-red-100 text-red-600 "
+                        }`}
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      
                     </div>
                   </div>
                 </div>

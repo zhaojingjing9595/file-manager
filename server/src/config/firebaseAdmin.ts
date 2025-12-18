@@ -26,6 +26,8 @@ import type { Bucket } from '@google-cloud/storage';
 // Use a standard import for JSON with TypeScript's resolveJsonModule
 // import serviceAccount from '../.firebase-key/file-manager-7b2bc-firebase-adminsdk-fbsvc-2405d7d7a0.json' with { type: 'json' };
 import { applicationDefault } from 'firebase-admin/app';
+import dotenv from "dotenv";
+dotenv.config();
 
 // Initialize only if no apps exist (prevents errors during hot-reloads)
 
