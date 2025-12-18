@@ -1,7 +1,7 @@
 import { useState, ReactNode, useEffect } from "react";
 import AuthContext, { User } from "../Context/AuthContext";
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
-import { auth, googleProvider, db } from "../firebase";
+import { auth, googleProvider, db } from "../firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
