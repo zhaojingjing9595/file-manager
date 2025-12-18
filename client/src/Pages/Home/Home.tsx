@@ -2,8 +2,10 @@ import { ChangeEvent, useEffect, useState } from "react"
 import { Building2, Download, File, Filter, LogIn, LogOut, Search, Shield, Trash2, Upload, User } from "lucide-react"
 import useAuth from "../../Hooks/useAuth"
 import { useNavigate } from "react-router-dom"
-import { deleteFile, downloadFile, fetchUserFiles, uploadMultipleFiles } from "../../api/filesApi"
+import { deleteFile, downloadFile, uploadMultipleFiles } from "../../api/filesApi"
 import FullPageLoader from "../../Components/FullPageLoader"
+import { collection, onSnapshot, query, where } from "firebase/firestore"
+import { db } from "../../firebaseConfig"
 
 export type FileType = {
     id: string
@@ -15,30 +17,58 @@ export type FileType = {
 }
 
 const Home = () => {
-    const {currentUser, token, authLoading, onLogout} = useAuth()
-    const [files, setFiles] = useState<FileType[]>([])
-    const [searchTerm, setSearchTerm] = useState("")
-    const [filterType, setFilterType] = useState("all")
-    const [sortBy, setSortBy] = useState("date")
-    const navigate = useNavigate(); // Hook to handle redirection after successful login
+  const {currentUser, token, authLoading, onLogout} = useAuth()
+  const [files, setFiles] = useState<FileType[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterType, setFilterType] = useState("all")
+  const [sortBy, setSortBy] = useState("date")
+  const navigate = useNavigate(); // Hook to handle redirection after successful login
   console.log('home page authloading:', authLoading)
+
   useEffect(() => {
-    const loadFiles = async () => {
-      if (!token) return;
-      try {
-        // setLoading(true);
-        const data = await fetchUserFiles();
-        console.log('load data:', data)
-        setFiles(data);
-      } catch (err) {
-        alert("Failed to load files");
-        console.log('load data error: ', err)
-      } finally {
-        // setLoading(false);
-      }
-    };
-      loadFiles()
-    }, [token])
+    if (!token || !currentUser?.id) return;
+
+    // 1. Define the query (e.g., files belonging to this user)
+    const q = currentUser.isAdmin ? query(collection(db, "files")) : query(
+      collection(db, "files"), 
+      where("userId", "==", currentUser.id)
+    );
+
+    // 2. Set up the listener
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const updatedFiles  = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as FileType));
+      
+      console.log('Real-time update:', updatedFiles);
+      setFiles(updatedFiles);
+    }, (err) => {
+      console.error('Subscription error:', err);
+      alert("Lost connection to database");
+    });
+
+    // 3. CLEANUP: This is crucial! It stops the listener when the user leaves the page.
+    return () => unsubscribe();
+  }, [token, currentUser?.id, currentUser?.isAdmin]);
+  
+  // useEffect(() => {
+  //   const loadFiles = async () => {
+  //     if (!token) return;
+  //     try {
+  //       // setLoading(true);
+  //       const data = await fetchUserFiles();
+  //       console.log('load data:', data)
+  //       setFiles(data);
+  //     } catch (err) {
+  //       alert("Failed to load files");
+  //       console.log('load data error: ', err)
+  //     } finally {
+  //       // setLoading(false);
+  //     }
+  //   };
+  //     loadFiles()
+  //   }, [token])
 
     const formatSize = (size: number) => {
         if (size >= 1024 * 1024) return (size / (1024 * 1024)).toFixed(1) + " MB"
@@ -48,8 +78,8 @@ const Home = () => {
 
     const getUserEmail = (userId?: string) => {
         if (!userId) return "unknown"
-        if (currentUser && currentUser.id === userId) return currentUser.email
-        return "user@example.com"
+        if (currentUser && currentUser.id === userId) return 'you'
+        return "From: other user"
     }
 
   const handleFileDownload = async (fileId: string) => {
@@ -303,20 +333,29 @@ const Home = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleFileDownload(file.id)}
-                        className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition text-gray-600"
+                        disabled={currentUser && currentUser.id !== file.userId}
+                        className={`p-2 rounded-lg transition ${
+                          currentUser && currentUser.id !== file.userId
+                            ? " opacity-50 bg-gray-200" 
+                            : "bg-blue-50 hover:bg-blue-100 text-blue-600"
+                        }`}
                         title="Download"
                       >
                         <Download className="w-4 h-4" />
                       </button>
-                      {(currentUser.isAdmin || file.userId === currentUser.id) && (
-                        <button
-                          onClick={() => handleFileDelete(file.id)}
-                          className="p-2 bg-gray-50 hover:bg-red-50 rounded-lg transition text-gray-600 hover:text-red-600"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button
+                        disabled={currentUser && currentUser.id !== file.userId}
+                        onClick={() => handleFileDelete(file.id)}
+                        className={`p-2 rounded-lg transition ${
+                          currentUser && currentUser.id !== file.userId
+                            ? " opacity-50 bg-gray-200" 
+                            : "bg-red-50 hover:bg-red-100 text-red-600 "
+                        }`}
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      
                     </div>
                   </div>
                 </div>

@@ -24,14 +24,27 @@
 import admin from 'firebase-admin';
 import type { Bucket } from '@google-cloud/storage';
 // Use a standard import for JSON with TypeScript's resolveJsonModule
-import serviceAccount from '../.firebase-key/file-manager-7b2bc-firebase-adminsdk-fbsvc-2405d7d7a0.json' with { type: 'json' };
+// import serviceAccount from '../.firebase-key/file-manager-7b2bc-firebase-adminsdk-fbsvc-2405d7d7a0.json' with { type: 'json' };
+import { applicationDefault } from 'firebase-admin/app';
+import dotenv from "dotenv";
+dotenv.config();
 
 // Initialize only if no apps exist (prevents errors during hot-reloads)
+
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-    storageBucket: 'file-manager-7b2bc.firebasestorage.app'
-  });
+  // if (process.env.NODE_ENV === 'production') { 
+    // PRODUCTION: Cloud Run automatically provides credentials
+    admin.initializeApp({
+      credential: applicationDefault(),
+      ...(process.env.STORAGE_BUCKET_NAME && { storageBucket: process.env.STORAGE_BUCKET_NAME })
+    });
+  // } 
+  // else {
+  //   admin.initializeApp({
+  //     credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+  //     storageBucket: 'file-manager-7b2bc.firebasestorage.app'
+  //   });
+  // }
 }
 
 // 1. Database Reference

@@ -36,18 +36,20 @@ const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction) 
     }
 }
 
-const identifyRole = (req: AuthRequest, res: Response, next: NextFunction) => {
+const identifyRole = async(req: AuthRequest, res: Response, next: NextFunction) => {
     // 1. Ensure a user is actually logged in (safety check)
-    if (!req.user) {
+    if (!req.user?.uid) {
         return res.status(401).json({ error: 'Unauthorized: Authentication required' });
     }
 
-    // 2. Define role Logic
-    if (req.user.isAdmin) {
-        req.user.role = 'admin'
-    } else {
-        req.user.role = 'user'
+    // 2. Fetch user record from DB, Define role Logic
+    const dbUserSnapshot = await db.collection("users").doc(req.user.uid).get();
+    if (!dbUserSnapshot.exists) {
+      return res.status(403).json({ error: "User not registered" });
     }
+    const dbUser = dbUserSnapshot.data();
+    req.user.isAdmin = Boolean(dbUser?.isAdmin);
+    req.user.role = dbUser?.isAdmin ? "admin" : "user";
     next()
 }
 export {requireAuth, identifyRole};

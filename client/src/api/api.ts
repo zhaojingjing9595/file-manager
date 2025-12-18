@@ -1,9 +1,10 @@
 // client/src/services/api.ts
 import axios from 'axios';
-import { auth } from '../firebase';
+import { auth } from '../firebaseConfig';
 
+const API_BASE_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api/v1',
+  baseURL: API_BASE_URL,
 });
 
 // Request Interceptor: Runs before EVERY request

@@ -8,9 +8,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:5173'];
+  
 app.use(cors({
-  origin: [process.env.CLIENT_DEV_URL as string],
-  credentials: true //?
+  origin: allowedOrigins,
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'] 
 }));
 app.use(express.json());
 
@@ -23,5 +28,5 @@ app.use('/api/v1', protectedRoutes)
 app.use('/api/v1/files', fileRoutes)
 
 app.listen(PORT, () => {
-  console.log(`API running on http://localhost:${PORT}`);
+  console.log(`API running on port:${PORT}`);
 });

@@ -1,5 +1,5 @@
 import axios from "axios"
-import { auth } from "../firebase";
+import { auth } from "../firebaseConfig";
 import { FileType } from "../Pages/Home/Home";
 import api from "./api";
 

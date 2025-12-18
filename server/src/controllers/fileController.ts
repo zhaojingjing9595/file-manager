@@ -6,7 +6,7 @@ import { QueryDocumentSnapshot } from "firebase-admin/firestore";
 
 export const listAllFiles = async (req: AuthRequest, res: Response) => {
   try {
-      const userId = req.user?.uid;
+    const userId = req.user?.uid;
     const userRole = req.user?.role; // Set by your auth middleware
     let filesQuery: any = db.collection('files');
 
@@ -20,7 +20,6 @@ export const listAllFiles = async (req: AuthRequest, res: Response) => {
       id: doc.id,
       ...doc.data()
     }));
-
     res.status(200).json(files);
 
     } catch (error) {
