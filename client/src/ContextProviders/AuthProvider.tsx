@@ -1,6 +1,6 @@
 import { useState, ReactNode, useEffect } from "react";
 import AuthContext, { User } from "../Context/AuthContext";
-import { onAuthStateChanged, signInWithPopup } from "firebase/auth";
+import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { auth, googleProvider, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -12,13 +12,14 @@ interface Props {
 export default function AuthProvider({ children }: Props) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
+  const [authLoading , setAuthLoading] = useState(true)
   const navigate = useNavigate(); // Hook to handle redirection after successful login
 
   useEffect(() => {
     // This listener runs every time the page loads
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        console.log("onAuthStateChanged firebaseUser:",firebaseUser)
+        // console.log("onAuthStateChanged firebaseUser:",firebaseUser)
         try {
           // 1. Get the ID Token (for your API calls)
           const idToken = await firebaseUser.getIdToken();
@@ -29,7 +30,8 @@ export default function AuthProvider({ children }: Props) {
           const userData = userDoc.exists() ? userDoc.data() : {};
           
           // 3. Set custom user object
-          setCurrentUser({email: userData.email, id: userData.uid, isAdmin: userData.isAdmin})
+          setCurrentUser({ email: userData.email, id: userData.uid, isAdmin: userData.isAdmin })
+          setAuthLoading(false)
         } catch (error) {
           console.error("Error fetching user role:", error);
         }
@@ -37,6 +39,7 @@ export default function AuthProvider({ children }: Props) {
         // User is logged out
         setCurrentUser(null);
         setToken(null);
+        setAuthLoading(false)
       }
       // setLoading(false); // Authentication check finished
     });
@@ -46,6 +49,7 @@ export default function AuthProvider({ children }: Props) {
 
   const handleGoogleSignIn = async () => {
     try {
+      setAuthLoading(true);
       // 1. Authenticate with Firebase
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
@@ -74,7 +78,7 @@ export default function AuthProvider({ children }: Props) {
     }
       // 2. Get the ID Token for the backend
       const idToken = await user.getIdToken();
-      console.log("Firebase ID Token:", idToken);
+      // console.log("Firebase ID Token:", idToken);
 
       // 3. Send the ID Token to the Express Backend
       // This is the CRITICAL step for authentication
@@ -90,18 +94,19 @@ export default function AuthProvider({ children }: Props) {
       });
 
       const data = await backendResponse.json();
-      console.log("Backend response:", data);
+      // console.log("Backend response:", data);
       
       if (data) {
         // 4. Handle success (e.g., store backend session/user info, redirect)
+        navigate('/'); 
         console.log("Backend verification successful!");
         setCurrentUser({email: data.email, id: data.firebase_uid, isAdmin: data.isAdmin})
         setToken(idToken)
-        navigate('/'); 
         return;
-      } 
+      }
       console.log("nothing returned", data);
     } catch (error) {
+      setAuthLoading(false);
       if (error instanceof Error) {
         console.error("Sign-in failed:", error.message);
       } else {
@@ -110,16 +115,26 @@ export default function AuthProvider({ children }: Props) {
     }
   };
   
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setToken(null);
-    //  navigate?
+  const handleLogout = async () => {
+    try {
+      // 1. Call Firebase to invalidate the session
+      await signOut(auth);
+      
+      setCurrentUser(null);
+      setToken(null);
+      
+      console.log("User signed out successfully");
+    } catch (error) {
+      console.error("Error signing out: ", error);
+      alert("Logout failed. Please try again.");
+    }
   }
   
   return (
     <AuthContext.Provider value={{
       currentUser,
       token,
+      authLoading,
       onGoogleLogin: handleGoogleSignIn,
       onLogout: handleLogout
       

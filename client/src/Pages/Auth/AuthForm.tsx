@@ -1,5 +1,5 @@
 import { Building2 } from "lucide-react"
-import { useState } from "react"
+// import { useState } from "react"
 import { Link, } from "react-router-dom"
 import useAuth from "../../Hooks/useAuth"
 
@@ -7,15 +7,15 @@ type AuthFormProps = { mode?: 'signup' | 'login' }
     
 const AuthForm = ({ mode }: AuthFormProps) => {
   const { onGoogleLogin} = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  // const [email, setEmail] = useState('')
+  // const [password, setPassword] = useState('')
   const isSignUp = mode === "signup";
-  const handleSignUp = () => {
+  // const handleSignUp = () => {
 
-  }
-  const handleLogin = () => {
+  // }
+  // const handleLogin = () => {
 
-  }
+  // }
   return (
      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-sm p-8 w-full max-w-md border border-gray-200">
@@ -28,7 +28,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
               </h1>
             </div>
             
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email
@@ -61,7 +61,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
               >
                 {isSignUp ? 'Create Account' : 'Sign In'}
               </button>
-            </div>
+            </div> */}
             
             <div className="mt-6">
               <div className="relative">
@@ -69,7 +69,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
                   <div className="w-full border-t border-gray-200"></div>
                 </div>
                 <div className="relative flex justify-center text-xs">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-white text-gray-500">Sign In with</span>
                 </div>
               </div>
   
@@ -96,11 +96,11 @@ const AuthForm = ({ mode }: AuthFormProps) => {
               </Link>
             </div>
             
-            <div className="mt-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            {/* <div className="mt-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
               <p className="font-medium mb-1 text-gray-900 text-xs">Demo:</p>
               <p className="text-gray-600 text-xs">admin@realestate.ai / admin</p>
               <p className="text-gray-600 text-xs">agent@realestate.ai / agent</p>
-            </div>
+            </div> */}
           </div>
         </div>
   )

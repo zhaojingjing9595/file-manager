@@ -9,6 +9,7 @@ export interface User {
 export interface AuthContextType {
     currentUser: User | null;
     token: string | null;
+    authLoading: boolean;
     onGoogleLogin: () => Promise<void>;
     onLogout: () => void;
 }
