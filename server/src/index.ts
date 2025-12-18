@@ -23,5 +23,5 @@ app.use('/api/v1', protectedRoutes)
 app.use('/api/v1/files', fileRoutes)
 
 app.listen(PORT, () => {
-  console.log(`API running on http://localhost:${PORT}`);
+  console.log(`API running on port:${PORT}`);
 });

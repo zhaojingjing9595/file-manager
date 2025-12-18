@@ -14,6 +14,7 @@ export default function AuthProvider({ children }: Props) {
   const [token, setToken] = useState<string | null>(null)
   const [authLoading , setAuthLoading] = useState(true)
   const navigate = useNavigate(); // Hook to handle redirection after successful login
+  const API_BASE_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
   useEffect(() => {
     // This listener runs every time the page loads
@@ -82,7 +83,7 @@ export default function AuthProvider({ children }: Props) {
 
       // 3. Send the ID Token to the Express Backend
       // This is the CRITICAL step for authentication
-      const backendResponse = await fetch('http://localhost:3000/api/v1/auth/verify-token', {
+      const backendResponse = await fetch(`${API_BASE_URL}/auth/verify-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
