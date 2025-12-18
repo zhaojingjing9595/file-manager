@@ -1,18 +1,13 @@
 import axios from "axios"
 import { auth } from "../firebase";
 import { FileType } from "../Pages/Home/Home";
+import api from "./api";
 
-const api = axios.create({
-    baseURL: "http://localhost:3000/api/v1/files"
-})
-
-export const fetchUserFiles = async (idToken: string) => {
+export const fetchUserFiles = async () => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Not logged in");
     try {
-        const response = await api.get('/', {
-            headers: {
-                Authorization: `Bearer ${idToken}`
-            }
-        });
+        const response = await api.get('/files');
         return response.data; // Array of FileType objects
     } catch (error) {
         console.error("Error fetching files:", error);
@@ -20,15 +15,14 @@ export const fetchUserFiles = async (idToken: string) => {
     }
 }
 
-export const uploadSingleFile = async (file: FileType, idToken: string) => {
+export const uploadSingleFile = async (file: FileType) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not logged in");
     
     try {
         // 1. Get Signed URL
-        const { data } = await api.post('/upload-url', 
-            { fileName: file.name, fileType: file.type, fileId: file.id }, 
-            { headers: { Authorization: `Bearer ${idToken}` }}
+        const { data } = await api.post('/files/upload-url', 
+            { fileName: file.name, fileType: file.type, fileId: file.id }
         );
         console.log('/upload-url res: ', data)
 
@@ -51,10 +45,8 @@ export const uploadSingleFile = async (file: FileType, idToken: string) => {
         }
     
         // 3. Confirm Metadata
-        const res = await api.post('/confirm', 
-            { fileId: file.id, gcsPath: data.gcsPath, name: file.name, size: file.size, type: file.type, date: file.date },
-            { headers: { Authorization: `Bearer ${idToken}` }}
-        );
+        const res = await api.post('/files/confirm', 
+            { fileId: file.id, gcsPath: data.gcsPath, name: file.name, size: file.size, type: file.type, date: file.date });
         console.log('/confirm res: ', res)
         return { name: file.name, fileId: file.id, status: 'success' };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,9 +66,11 @@ export const uploadSingleFile = async (file: FileType, idToken: string) => {
  * Handles the batch using Promise.all
  * Even if one fails, we collect the results of all.
  */
-export const uploadMultipleFiles = async (files: FileType[], idToken: string) => {
+export const uploadMultipleFiles = async (files: FileType[]) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Not logged in");
     try {
-        const tasks = files.map(file => uploadSingleFile(file, idToken));
+        const tasks = files.map(file => uploadSingleFile(file));
         return await Promise.all(tasks);
     } catch (error) {
          // Log error and return a standardized failure object
@@ -86,4 +80,34 @@ export const uploadMultipleFiles = async (files: FileType[], idToken: string) =>
              message: String(error) || "Connection lost" 
          };
     }
+}
+
+
+export const downloadFile = async (fileId: string) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Not logged in");
+    try {
+        const { data } = await api.get(`/files/${fileId}/download-url`)
+        return { ...data, status: 'success' };
+    } catch (error) {
+        console.error('download file failed :', error);
+        return { 
+            status: 'error', 
+            message: String(error) || "Connection lost" 
+        };
+    }
+}
+
+export const deleteFile = async (fileId: string) => {
+    try {
+        const res = await api.delete(`/files/${fileId}`)
+        return { ...res, status: 'success' };
+    } catch (error) {
+        console.error('delete file failed :', error);
+        return { 
+            status: 'error', 
+            message: String(error) || "Connection lost" 
+        };
+    }
+
 }

@@ -18,8 +18,8 @@ router.post('/confirm', fileController.confirmUpload);
 
 // // Specific File Operations
 // router.get('/:id', fileController.getFileDetails);
-// router.get('/:id/download', fileController.getDownloadUrl);
-// router.delete('/:id', fileController.deleteFile);
+router.get('/:fileId/download-url', fileController.getDownloadUrl);
+router.delete('/:fileId', fileController.deleteFile);
 router
 .route('/')
 

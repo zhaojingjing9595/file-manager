@@ -2,7 +2,7 @@ import { ChangeEvent, useEffect, useState } from "react"
 import { Building2, Download, File, Filter, LogIn, LogOut, Search, Shield, Trash2, Upload, User } from "lucide-react"
 import useAuth from "../../Hooks/useAuth"
 import { useNavigate } from "react-router-dom"
-import { fetchUserFiles, uploadMultipleFiles } from "../../api/filesApi"
+import { deleteFile, downloadFile, fetchUserFiles, uploadMultipleFiles } from "../../api/filesApi"
 
 export type FileType = {
     id: string
@@ -22,11 +22,11 @@ const Home = () => {
     const navigate = useNavigate(); // Hook to handle redirection after successful login
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadFiles = async () => {
       if (!token) return;
       try {
         // setLoading(true);
-        const data = await fetchUserFiles(token);
+        const data = await fetchUserFiles();
         console.log('load data:', data)
         setFiles(data);
       } catch (err) {
@@ -36,7 +36,7 @@ const Home = () => {
         // setLoading(false);
       }
     };
-      loadData()
+      loadFiles()
     }, [token])
 
     const formatSize = (size: number) => {
@@ -51,13 +51,39 @@ const Home = () => {
         return "user@example.com"
     }
 
-    const handleDownload = (file: FileType) => {
+  const handleFileDownload = async (fileId: string) => {
+      try {
         // placeholder download handler
-        console.log("download", file)
+        console.log("download fileId: ", fileId)
+        const res = await downloadFile(fileId)
+        console.log("handleFileDownload response: ", res)
+
+        if (res.status === "success") {
+          // 2. Trigger browser download
+          const link = document.createElement('a');
+          link.href = res.downloadUrl;
+          link.setAttribute('download', res.fileName);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          // window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
+        }
+      } catch (error) {
+        console.error('handleFileDownload error:', error)
+
+      }
     }
 
-    const handleDelete = (id: string) => {
-        setFiles(prev => prev.filter(f => f.id !== id))
+    const handleFileDelete = async (fileId: string) => {
+      try { 
+        const res = await deleteFile(fileId)
+        console.log("handleFileDelete response: ", res)
+        if (res.status === "success") { 
+          setFiles(prev => prev.filter(f => f.id !== fileId))
+        }
+      } catch (error) {
+        console.error('handleFileDelete error:', error)
+      }
     }
 
     const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +104,7 @@ const Home = () => {
             }
         })
         
-        const response = await uploadMultipleFiles(newFiles, token);
+        const response = await uploadMultipleFiles(newFiles);
         console.log('uploadMultipleFiles response', response)
         let successfulFileIds = new Set<string>();
         if (Array.isArray(response)) {
@@ -268,7 +294,7 @@ const Home = () => {
                           
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => handleDownload(file)}
+                              onClick={() => handleFileDownload(file.id)}
                               className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition text-gray-600"
                               title="Download"
                             >
@@ -276,7 +302,7 @@ const Home = () => {
                             </button>
                             {(currentUser.isAdmin || file.userId === currentUser.id) && (
                               <button
-                                onClick={() => handleDelete(file.id)}
+                                onClick={() => handleFileDelete(file.id)}
                                 className="p-2 bg-gray-50 hover:bg-red-50 rounded-lg transition text-gray-600 hover:text-red-600"
                                 title="Delete"
                               >
