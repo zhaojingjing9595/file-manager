@@ -2,8 +2,10 @@ import { ChangeEvent, useEffect, useState } from "react"
 import { Building2, Download, File, Filter, LogIn, LogOut, Search, Shield, Trash2, Upload, User } from "lucide-react"
 import useAuth from "../../Hooks/useAuth"
 import { useNavigate } from "react-router-dom"
-import { deleteFile, downloadFile, fetchUserFiles, uploadMultipleFiles } from "../../api/filesApi"
+import { deleteFile, downloadFile, uploadMultipleFiles } from "../../api/filesApi"
 import FullPageLoader from "../../Components/FullPageLoader"
+import { collection, onSnapshot, query, where } from "firebase/firestore"
+import { db } from "../../firebaseConfig"
 
 export type FileType = {
     id: string
@@ -22,23 +24,51 @@ const Home = () => {
   const [sortBy, setSortBy] = useState("date")
   const navigate = useNavigate(); // Hook to handle redirection after successful login
   console.log('home page authloading:', authLoading)
+
   useEffect(() => {
-    const loadFiles = async () => {
-      if (!token) return;
-      try {
-        // setLoading(true);
-        const data = await fetchUserFiles();
-        console.log('load data:', data)
-        setFiles(data);
-      } catch (err) {
-        alert("Failed to load files");
-        console.log('load data error: ', err)
-      } finally {
-        // setLoading(false);
-      }
-    };
-      loadFiles()
-    }, [token])
+    if (!token || !currentUser?.id) return;
+
+    // 1. Define the query (e.g., files belonging to this user)
+    const q = currentUser.isAdmin ? query(collection(db, "files")) : query(
+      collection(db, "files"), 
+      where("userId", "==", currentUser.id)
+    );
+
+    // 2. Set up the listener
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const updatedFiles  = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as FileType));
+      
+      console.log('Real-time update:', updatedFiles);
+      setFiles(updatedFiles);
+    }, (err) => {
+      console.error('Subscription error:', err);
+      alert("Lost connection to database");
+    });
+
+    // 3. CLEANUP: This is crucial! It stops the listener when the user leaves the page.
+    return () => unsubscribe();
+  }, [token, currentUser?.id, currentUser?.isAdmin]);
+  
+  // useEffect(() => {
+  //   const loadFiles = async () => {
+  //     if (!token) return;
+  //     try {
+  //       // setLoading(true);
+  //       const data = await fetchUserFiles();
+  //       console.log('load data:', data)
+  //       setFiles(data);
+  //     } catch (err) {
+  //       alert("Failed to load files");
+  //       console.log('load data error: ', err)
+  //     } finally {
+  //       // setLoading(false);
+  //     }
+  //   };
+  //     loadFiles()
+  //   }, [token])
 
     const formatSize = (size: number) => {
         if (size >= 1024 * 1024) return (size / (1024 * 1024)).toFixed(1) + " MB"
