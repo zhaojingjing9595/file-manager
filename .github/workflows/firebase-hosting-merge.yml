@@ -11,7 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci --prefix client && npm run build --prefix client
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: ./client
+
+      - name: Build
+        # THIS IS THE CRITICAL PART
+        run: npm run build
+        working-directory: ./client
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          # VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
