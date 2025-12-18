@@ -15,12 +15,12 @@ export type FileType = {
 }
 
 const Home = () => {
-    const {currentUser, token, authLoading, onLogout} = useAuth()
-    const [files, setFiles] = useState<FileType[]>([])
-    const [searchTerm, setSearchTerm] = useState("")
-    const [filterType, setFilterType] = useState("all")
-    const [sortBy, setSortBy] = useState("date")
-    const navigate = useNavigate(); // Hook to handle redirection after successful login
+  const {currentUser, token, authLoading, onLogout} = useAuth()
+  const [files, setFiles] = useState<FileType[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterType, setFilterType] = useState("all")
+  const [sortBy, setSortBy] = useState("date")
+  const navigate = useNavigate(); // Hook to handle redirection after successful login
   console.log('home page authloading:', authLoading)
   useEffect(() => {
     const loadFiles = async () => {
