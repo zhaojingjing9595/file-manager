@@ -8,8 +8,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:5173'];
+  
 app.use(cors({
-  origin: [process.env.CLIENT_DEV_URL as string],
+  origin: allowedOrigins,
   credentials: true //?
 }));
 app.use(express.json());
