@@ -6,6 +6,7 @@ import { QueryDocumentSnapshot } from "firebase-admin/firestore";
 
 export const listAllFiles = async (req: AuthRequest, res: Response) => {
   try {
+    console.log('listAllFiles -> user:', req.user)
     const userId = req.user?.uid;
     const userRole = req.user?.role; // Set by your auth middleware
     let filesQuery: any = db.collection('files');
@@ -14,13 +15,14 @@ export const listAllFiles = async (req: AuthRequest, res: Response) => {
     if (userRole !== 'admin') {
       filesQuery = filesQuery.where('userId', '==', userId);
     }
+    console.log('filesQuery: ', filesQuery)
     // Sort by newest first
     const snapshot = await filesQuery.get();
     const files = snapshot.docs.map((doc: QueryDocumentSnapshot) => ({
       id: doc.id,
       ...doc.data()
     }));
-
+    console.log('found files: ', files)
     res.status(200).json(files);
 
     } catch (error) {
