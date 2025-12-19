@@ -37,7 +37,7 @@ To avoid exposing the private Google Cloud Storage bucket to the public internet
 
 The application utilizes a hybrid data model. **Google Cloud Storage (GCS)** handles the physical binary files, while **Cloud Firestore** manages the searchable metadata and ownership logic.
 
-### Files Collection
+### _"files"_ Collection
 
 #### 1. Firestore (Metadata Database)
 File records are stored in `files` collection. Each document ID corresponds to a unique `fileId` generated during the upload process.
@@ -62,7 +62,8 @@ Files are physically stored in a private bucket. The directory structure is desi
 
 - **Example:** `uploads/user_123/a7b2-99c1-report.docx`
 
-### Users Collection (Extended Profile)
+
+### _"Users"_ Collection (Extended Profile)
 While Firebase Auth handles credentials, this collection stores additional user-specific metadata and application state. Using the Firebase `uid` as the Document ID ensures a 1:1 mapping between authentication and database records.
 
 **Collection:** `/users/{uid}`
@@ -93,18 +94,16 @@ You need to create two separate .env files: one for the backend and one for the 
 #### Backend (/server/.env)
 The backend requires access to your Google Cloud Service Account to interact with Firestore and Storage.
 
-PORT=3000
-# Path to the JSON key file downloaded from GCP IAM
-GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
-ALLOWED_ORIGINS='http://localhost:5173,https://file-manager-7b2bc.web.app,https://file-manager-7b2bc.firebaseapp.com'
-NODE_ENV="development"
-STORAGE_BUCKET_NAME="file-manager-7b2bc.firebasestorage.app"
+- PORT=3000
+- GOOGLE_APPLICATION_CREDENTIALS=./service-account.json //Path to the JSON key file downloaded from GCP IAM
+- ALLOWED_ORIGINS='http://localhost:5173,https://file-manager-7b2bc.web.app,https://file-manager-7b2bc.firebaseapp.com'
+- NODE_ENV="development"
+- STORAGE_BUCKET_NAME="file-manager-7b2bc.firebasestorage.app"
 
 #### Frontend (/client/.env)
 The frontend needs the Firebase configuration to initialize the SDK and the Backend URL to make API calls.
 
-# Use http://localhost:3000 for local dev
-VITE_API_URL=http://localhost:3000/api/v1 
+- VITE_API_URL=http://localhost:3000/api/v1 
 
 ### 2. Google Cloud Platform (GCP) Configuration
 Before redeploying, ensure your Service Account is correctly configured in the Google Cloud Console.
@@ -120,23 +119,11 @@ The browser will block requests if CORS is not configured.
 
 ### 3. Deployment and CI/CD
 This project uses an automated CI/CD pipeline. Any changes pushed to the `release/v1` branch trigger an automatic build and redeployment for both the frontend and backend.
-### **1. Automated Workflow**
+#### **1. Automated Workflow**
 - **Backend:** Pushing to the repository triggers a Google Cloud Build, which containerizes the Express server and updates the **Cloud Run** service.
 - **Frontend:** GitHub Actions (or Firebase App Hosting) builds the React production bundle and deploys it to **Firebase Hosting**.
 
-### **2. Infrastructure Configuration**
-Although the deployment is automated, the following cloud settings must be maintained:
-
-#### **IAM Roles (Cloud Run Service Account)**
-The Service Account must have these roles for the automated build to function correctly in production:
-- **Storage Object Admin**: For file operations.
-- **Service Account Token Creator**: For generating V4 Signed URLs.
-- **Cloud Datastore User**: For Firestore metadata access.
-
-#### **Firebase Auth "Authorized Domains"**
-To prevent "Unauthorized Domain" errors, ensure the following are whitelisted in the Firebase Console:
-- `file-manager-7b2bc.web.app`
-- `file-manager-7b2bc.firebaseapp.com`
-- `file-manager-559044491878.europe-west1.run.app` (Backend URL)
+#### **2. Infrastructure Configuration**
+Although the deployment is automated, cloud settings must be maintained.
 
 ---
