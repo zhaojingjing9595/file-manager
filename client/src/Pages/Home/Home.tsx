@@ -110,7 +110,7 @@ const Home = () => {
       const res = await deleteFile(fileId)
       console.log("handleFileDelete response: ", res)
       if (res.status === "success") { 
-        setFiles(prev => prev.filter(f => f.id !== fileId))
+        // setFiles(prev => prev.filter(f => f.id !== fileId))
       }
     } catch (error) {
       console.error('handleFileDelete error:', error)
@@ -137,26 +137,26 @@ const Home = () => {
       
       const response = await uploadMultipleFiles(newFiles);
       console.log('uploadMultipleFiles response', response)
-      let successfulFileIds = new Set<string>();
-      if (Array.isArray(response)) {
-        successfulFileIds = new Set(
-          response
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .filter((r: any) => r.status === "success")
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .map((r: any) => r.fileId)
-        );
-      } else {
+      // let successfulFileIds = new Set<string>();
+      // if (Array.isArray(response)) {
+        // successfulFileIds = new Set(
+        //   response
+        //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        //     .filter((r: any) => r.status === "success")
+        //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        //     .map((r: any) => r.fileId)
+        // );
+      // } else {
         // backend returned a single error object like { status: 'error', message: '...' }
-        console.error('uploadMultipleFiles error response:', response);
-      }
-      const successFiles: FileType[] = newFiles.filter(file =>
-        successfulFileIds.has(file.id)
-      );
+        // console.error('uploadMultipleFiles error response:', response);
+      // }
+      // const successFiles: FileType[] = newFiles.filter(file =>
+      //   successfulFileIds.has(file.id)
+      // );
 
-      console.log('successFiles: ', successFiles)
+      // console.log('successFiles: ', successFiles)
       
-      setFiles(prev => [...successFiles, ...prev])
+      // setFiles(prev => [...successFiles, ...prev])
       // reset input value to allow re-uploading same file if needed
       // e.currentTarget.value = ""
     } catch (error) {

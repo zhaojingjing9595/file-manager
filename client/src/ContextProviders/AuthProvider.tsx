@@ -101,7 +101,10 @@ export default function AuthProvider({ children }: Props) {
         // 4. Handle success (e.g., store backend session/user info, redirect)
         navigate('/'); 
         console.log("Backend verification successful!");
-        setCurrentUser({email: data.email, id: data.firebase_uid, isAdmin: data.isAdmin})
+        // 2. Fetch the extra user data from db
+        const userDoc = await getDoc(doc(db, "users", data.firebase_uid));
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        setCurrentUser({ email: userData.email, id: userData.uid, isAdmin: userData.isAdmin })
         setToken(idToken)
         return;
       }
